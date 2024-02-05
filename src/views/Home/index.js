@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect } from "react";
 import * as S from './styles';
+//import {Link} from 'react-router-dom';
+
+import api from '../../services/api';
+//import isConnected from '../../utils/isConnected';
 
 //NOSSOS COMPONENTES
 import Header from '../../components/Header';
@@ -9,10 +14,41 @@ import TaskCard from "../../components/TaskCard";
 
 function Home() {
     const [filterActived, setFilterActived] = useState('all');
+    const [tasks, setTasks] = useState([]);
+    const [lateCount, setLateCount] = useState();
+    //const [redirect, setRedirect] = useState(false);
+
+    async function loadTasks(){
+      await api.get(`/task/filter/${filterActived}/E0-06-E0-FD-EC-06`)
+      .then(response => {
+        setTasks(response.data)
+      })
+    }
+
+    async function lateVerify(){
+      await api.get(`/task/filter/late/E0-06-E0-FD-EC-06`)
+      .then(response => {
+        setLateCount(response.data.length)
+      })
+    }
+  
+    function Notification(){
+      setFilterActived('late');
+    }
+
+    useEffect(() => {
+      loadTasks();
+      lateVerify();
+  
+      // if(!isConnected)
+      //   setRedirect(true); 
+  
+    }, [filterActived, loadTasks])
+
     return (
         <S.Container>
         
-        <Header />
+        <Header lateCount={lateCount} clickNotification={Notification}/>
         
         <S.FilterArea>
           <button type="button"        onClick={() => setFilterActived("all")}>
@@ -38,17 +74,13 @@ function Home() {
   
         <S.Content>
           
-              <TaskCard  />  
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />
-              <TaskCard  />  
+        {
+          tasks.map(t => (
+            
+              <TaskCard type={t.type} title={t.title} when={t.when} done={t.done} />    
+
+          ))  
+        }  
 
         </S.Content>
   
